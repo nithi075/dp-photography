@@ -2,35 +2,75 @@ const Instagram = require("../models/Instagram");
 
 const addInstagram = async (req, res) => {
   try {
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Image is required"
+      });
+    }
+
     const data = new Instagram({
-      title: req.body.title,
-      postLink: req.body.postLink,
-      imageUrl: `http://localhost:5000/uploads/${req.file.filename}`
+      title: req.body.title || "",
+      postLink: req.body.postLink || "",
+      imageUrl: req.file.path // Cloudinary URL
     });
 
     await data.save();
-    res.json(data);
+
+    res.status(201).json({
+      success: true,
+      message: "Instagram post added successfully",
+      data
+    });
 
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.log("Instagram Upload Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 
 const getInstagram = async (req, res) => {
   try {
+
     const data = await Instagram.find();
-    res.json(data);
+
+    res.status(200).json(data);
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.log("Get Instagram Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 
 const deleteInstagram = async (req, res) => {
   try {
+
     await Instagram.findByIdAndDelete(req.params.id);
-    res.json({ message: "Deleted Successfully" });
+
+    res.status(200).json({
+      success: true,
+      message: "Deleted Successfully"
+    });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+
+    console.log("Delete Instagram Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
 };
 
