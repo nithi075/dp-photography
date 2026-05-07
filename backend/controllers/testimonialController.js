@@ -1,87 +1,78 @@
 const Testimonial = require("../models/Testimonial");
 
 // Add testimonial
-exports.addTestimonial = async (
-  req,
-  res
-) => {
+exports.addTestimonial = async (req, res) => {
   try {
+
     if (!req.file) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Image is required"
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Image is required"
+      });
     }
 
-    const data =
-      new Testimonial({
-        clientName:
-          req.body
-            .clientName,
-        review:
-          req.body.review,
-        imageUrl: `http://localhost:5000/uploads/${req.file.filename}`
-      });
+    const data = new Testimonial({
+      clientName: req.body.clientName || "",
+      review: req.body.review || "",
+      imageUrl: req.file.path // Cloudinary URL
+    });
 
     await data.save();
 
     res.status(201).json({
-      message:
-        "Testimonial uploaded successfully",
+      success: true,
+      message: "Testimonial uploaded successfully",
       data
     });
+
   } catch (error) {
-    console.log(
-      error
-    );
+
+    console.log("Testimonial Upload Error:", error);
 
     res.status(500).json({
-      error:
-        error.message
+      success: false,
+      error: error.message
     });
   }
 };
 
 // Get all testimonials
-exports.getTestimonial =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      const data =
-        await Testimonial.find();
+exports.getTestimonial = async (req, res) => {
+  try {
 
-      res.json(data);
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message
-      });
-    }
-  };
+    const data = await Testimonial.find();
+
+    res.status(200).json(data);
+
+  } catch (error) {
+
+    console.log("Get Testimonial Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
 
 // Delete testimonial
-exports.deleteTestimonial =
-  async (
-    req,
-    res
-  ) => {
-    try {
-      await Testimonial.findByIdAndDelete(
-        req.params.id
-      );
+exports.deleteTestimonial = async (req, res) => {
+  try {
 
-      res.json({
-        message:
-          "Deleted Successfully"
-      });
-    } catch (error) {
-      res.status(500).json({
-        error:
-          error.message
-      });
-    }
-  };
+    await Testimonial.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: "Deleted Successfully"
+    });
+
+  } catch (error) {
+
+    console.log("Delete Testimonial Error:", error);
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+};
