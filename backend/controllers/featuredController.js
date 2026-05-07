@@ -2,44 +2,58 @@ const Featured = require("../models/Featured");
 
 const addFeatured = async (req, res) => {
   try {
-    const imageUrls = req.files.map(
-      (file) =>
-        `http://localhost:5000/uploads/${file.filename}`
-    );
 
-    // check existing featured data
+    // Cloudinary URLs
+    const imageUrls =
+      req.files && req.files.length > 0
+        ? req.files.map((file) => file.path)
+        : [];
+
     let existingFeatured = await Featured.findOne();
 
     if (existingFeatured) {
-      // update existing document
-      existingFeatured.title = req.body.title;
-      existingFeatured.videoUrl = req.body.videoUrl;
-      existingFeatured.images = imageUrls;
+
+      existingFeatured.title =
+        req.body.title || existingFeatured.title;
+
+      existingFeatured.videoUrl =
+        req.body.videoUrl || existingFeatured.videoUrl;
+
+      // update images only if uploaded
+      if (imageUrls.length > 0) {
+        existingFeatured.images = imageUrls;
+      }
 
       await existingFeatured.save();
 
-      return res.json({
+      return res.status(200).json({
+        success: true,
         message: "Featured updated successfully",
         data: existingFeatured
       });
     }
 
-    // create new document only if no data exists
-    const data = new Featured({
-      title: req.body.title,
-      videoUrl: req.body.videoUrl,
+    // create new
+    const newFeatured = new Featured({
+      title: req.body.title || "",
+      videoUrl: req.body.videoUrl || "",
       images: imageUrls
     });
 
-    await data.save();
+    await newFeatured.save();
 
-    res.json({
+    res.status(201).json({
+      success: true,
       message: "Featured added successfully",
-      data
+      data: newFeatured
     });
 
   } catch (error) {
+
+    console.log("Featured Error:", error);
+
     res.status(500).json({
+      success: false,
       error: error.message
     });
   }
@@ -47,19 +61,24 @@ const addFeatured = async (req, res) => {
 
 const getFeatured = async (req, res) => {
   try {
+
     const data = await Featured.findOne();
 
     if (!data) {
-      return res.json({
-        message: "No featured data found",
+      return res.status(200).json({
+        success: true,
         images: []
       });
     }
 
-    res.json(data);
+    res.status(200).json(data);
 
   } catch (error) {
+
+    console.log("Get Featured Error:", error);
+
     res.status(500).json({
+      success: false,
       error: error.message
     });
   }
