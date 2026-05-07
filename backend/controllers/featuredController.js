@@ -3,79 +3,67 @@ const Featured = require("../models/Featured");
 const addFeatured = async (req, res) => {
   try {
 
-    // Cloudinary URLs
-    const imageUrls =
-      req.files && req.files.length > 0
-        ? req.files.map((file) => file.path)
-        : [];
+    console.log("BODY:", req.body);
+    console.log("FILES:", req.files);
 
-    let existingFeatured = await Featured.findOne();
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Images are required"
+      });
+    }
+
+    const imageUrls = req.files.map(
+      (file) => file.path
+    );
+
+    let existingFeatured =
+      await Featured.findOne();
 
     if (existingFeatured) {
 
       existingFeatured.title =
-        req.body.title || existingFeatured.title;
+        req.body.title;
 
       existingFeatured.videoUrl =
-        req.body.videoUrl || existingFeatured.videoUrl;
+        req.body.videoUrl;
 
-      // update images only if uploaded
-      if (imageUrls.length > 0) {
-        existingFeatured.images = imageUrls;
-      }
+      existingFeatured.images =
+        imageUrls;
 
       await existingFeatured.save();
 
       return res.status(200).json({
         success: true,
-        message: "Featured updated successfully",
+        message:
+          "Featured updated successfully",
         data: existingFeatured
       });
     }
 
-    // create new
-    const newFeatured = new Featured({
-      title: req.body.title || "",
-      videoUrl: req.body.videoUrl || "",
-      images: imageUrls
-    });
+    const newFeatured =
+      new Featured({
+        title: req.body.title,
+        videoUrl:
+          req.body.videoUrl,
+        images: imageUrls
+      });
 
     await newFeatured.save();
 
     res.status(201).json({
       success: true,
-      message: "Featured added successfully",
+      message:
+        "Featured uploaded successfully",
       data: newFeatured
     });
 
   } catch (error) {
 
-    console.log("Featured Error:", error);
-
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-};
-
-const getFeatured = async (req, res) => {
-  try {
-
-    const data = await Featured.findOne();
-
-    if (!data) {
-      return res.status(200).json({
-        success: true,
-        images: []
-      });
-    }
-
-    res.status(200).json(data);
-
-  } catch (error) {
-
-    console.log("Get Featured Error:", error);
+    console.log(
+      "FEATURED ERROR:",
+      error
+    );
 
     res.status(500).json({
       success: false,
@@ -85,6 +73,5 @@ const getFeatured = async (req, res) => {
 };
 
 module.exports = {
-  addFeatured,
-  getFeatured
+  addFeatured
 };
