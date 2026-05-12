@@ -1,15 +1,20 @@
 const Featured = require("../models/Featured");
 
-const addFeatured = async (req, res) => {
+const addFeatured = async (
+  req,
+  res
+) => {
   try {
-    // Cloudinary full URL
-    const imageUrls = req.files.map(
-      (file) => file.path
-    );
+    // New uploaded images
+    const imageUrls =
+      req.files.map(
+        (file) => file.path
+      );
 
     let existingFeatured =
       await Featured.findOne();
 
+    // UPDATE
     if (existingFeatured) {
       existingFeatured.title =
         req.body.title;
@@ -17,8 +22,24 @@ const addFeatured = async (req, res) => {
       existingFeatured.videoUrl =
         req.body.videoUrl;
 
+      // Old + New images
+      let updatedImages = [
+        ...existingFeatured.images,
+        ...imageUrls
+      ];
+
+      // Keep latest 8 only
+      if (
+        updatedImages.length > 8
+      ) {
+        updatedImages =
+          updatedImages.slice(
+            updatedImages.length - 8
+          );
+      }
+
       existingFeatured.images =
-        imageUrls;
+        updatedImages;
 
       await existingFeatured.save();
 
@@ -29,6 +50,7 @@ const addFeatured = async (req, res) => {
       });
     }
 
+    // CREATE
     const data = new Featured({
       title: req.body.title,
       videoUrl: req.body.videoUrl,
@@ -50,7 +72,10 @@ const addFeatured = async (req, res) => {
   }
 };
 
-const getFeatured = async (req, res) => {
+const getFeatured = async (
+  req,
+  res
+) => {
   try {
     const data =
       await Featured.findOne();
